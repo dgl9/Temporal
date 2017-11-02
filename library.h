@@ -14,6 +14,38 @@ typedef struct node
 } node;
 
 
+typedef struct{
+  int rows;
+  int cols;
+  node ** data;
+} cell_matrix;
+
+
+
+
+cell_matrix * newCellMatrix(int rows, int cols);
+int deleteCellMatrix(cell_matrix * mtx);
+
+#define CELL(mtx, row, col) \
+  mtx->data[(col-1) * mtx->rows + (row-1)]
+
+cell_matrix * copyCellMatrix(cell_matrix * mtx); //copies one matrix into another
+int setCell(cell_matrix * mtx, int row, int col, int val);
+node * getCell(cell_matrix * mtx, int row, int col);
+int printCellMatrix(cell_matrix * mtx);
+void printCell(cell_matrix * mtx, int row, int col);
+void AppendToCell(cell_matrix * mtx, int row, int col, int val);
+void uniqueAppendToCell(cell_matrix * mtx, int row, int col, int val);
+void SetCell(cell_matrix * mtx, int row, int col, int val);
+int ListLength(node * head);
+void uniqueAppendList(node * head, int * nums, int amnt);
+node * ismember(node * in, node * out);
+int isempty(node* head);
+int check_row(matrix * A, matrix * B, int rowA, int rowB);
+node * ismemberRows(matrix * A, matrix * B);
+int nonZeroAmnt(node * in);
+matrix * DistanceMatrix(matrix * Trans, node * Tx, node * Ty, int BigNum);
+
 
 
 matrix * newMatrix(int rows, int cols);
@@ -47,6 +79,8 @@ int diagonal(matrix * v, matrix * mtx);
 /*
     Linked list
 */
+
+int getLinkedElement(node * head, int element);
 
 typedef void (*callback)(node* data);
 
