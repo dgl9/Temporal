@@ -1,14 +1,229 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <string.h>
-#include "create_buchi.h"
+#include "library.h"
 
 
-/* Creates a ``rows by cols'' matrix with all values 0.
- * Returns NULL if rows <= 0 or cols <= 0 and otherwise a
- * pointer to the new matrix.
- */
+
+
+
+//----------------------------------------------------------
+
+
+
+
+
+
+
+
+int nonZeroAmnt(node * in){
+  node * temp = in;
+  int count = 0;
+  for(int i = 0; i < ListLength(in); i++){
+    if(temp->data != 0){
+      count++;
+    }
+    temp = temp->next;
+  }
+  return count;
+}
+
+
+
+
+int check_row(matrix * A, matrix * B, int rowA, int rowB){
+  int row_equal = 1;
+  for(int i = 1; i <= A->cols; i++){
+    if(CELL(A,rowA,i) != CELL(B,rowB,i)){
+      row_equal = 0;
+    }
+  }
+  return row_equal;
+}
+
+node * ismember(node * in, node * out){
+  node* new_node = (node*)malloc(sizeof(node));
+  new_node->next = NULL;
+  node * temp = in;
+  int count = 0;
+  while((temp)){
+    int x = (searchInd(out, temp->data));
+    if(x){
+      if(count == 0){
+        new_node->data = x;
+        new_node->next = NULL;
+      }
+      else{
+        new_node = append(new_node,x);
+      }
+    }
+    temp = temp->next;
+    count++;
+  }
+  return new_node;
+}
+
+
+int isempty(node* head){
+  if(head){
+    return 0;
+  }
+  return 1;
+}
+
+
+cell_matrix * newCellMatrix(int rows, int cols) {
+  if (rows <= 0 || cols <= 0) return NULL;
+
+  // allocate a matrix structure
+  cell_matrix * m = (cell_matrix *) malloc(sizeof(cell_matrix));
+
+  // set dimensions
+  m->rows = rows;
+  m->cols = cols;
+
+  // allocate a int array of length rows * cols
+  m->data = (node **) malloc(rows*cols*sizeof(node*));
+  // set all data to NULL
+  int i;
+  for (i = 0; i < rows*cols; i++)
+    m->data[i] = NULL;
+
+  return m;
+}
+
+int deleteCellMatrix(cell_matrix * mtx) {
+  if (!mtx) return -1;
+  // free mtx's data
+  assert (mtx->data);
+  free(mtx->data);
+  // free mtx itself
+  free(mtx);
+  return 0;
+}
+
+
+
+cell_matrix * copyCellMatrix(cell_matrix * mtx) {
+  if (!mtx) return NULL;
+
+  // create a new matrix to hold the copy
+  cell_matrix * cp = newCellMatrix(mtx->rows, mtx->cols);
+
+  // copy mtx's data to cp's data
+  memcpy(cp->data, mtx->data,
+         mtx->rows * mtx->cols * sizeof(int));
+
+  return cp;
+}
+
+
+
+
+void AppendToCell(cell_matrix * mtx, int row, int col, int val){
+  if(CELL(mtx,row,col)!=NULL){
+    CELL(mtx,row,col) = append(CELL(mtx,row,col),val);
+  }
+  else{
+    CELL(mtx,row,col) = create(val,NULL);
+  }
+}
+
+void SetCell(cell_matrix * mtx, int row, int col, int val){
+  dispose(CELL(mtx,row,col));
+  CELL(mtx,row,col) = create(val,NULL);
+}
+
+
+void uniqueAppendToCell(cell_matrix * mtx, int row, int col, int val){
+  if(CELL(mtx,row,col)!=NULL){
+    if (search(CELL(mtx,row,col),val) == NULL){
+      CELL(mtx,row,col) = append(CELL(mtx,row,col),val);
+    }
+  }
+  else{
+    CELL(mtx,row,col) = create(val,NULL);
+  }
+}
+
+void uniqueAppendList(node * head, int * nums, int amnt){
+  if(!nums) return;
+  int * temp = nums;
+  if (!(head->next) && (head->data == -1)){
+    head->data = *temp;
+    temp++;
+    amnt--;
+  }
+  for(int i = 0; i < amnt; i++){
+    if(!search(head,*temp)){
+      head = append(head,*temp);
+    }
+    temp++;
+  }
+}
+
+node * getCell(cell_matrix * mtx, int row, int col) {
+  if (!mtx) return NULL;
+  assert (mtx->data);
+  if (row <= 0 || row > mtx->rows ||
+      col <= 0 || col > mtx->cols)
+    return NULL;
+
+  return CELL(mtx, row, col);
+}
+
+int printCellMatrix(cell_matrix * mtx) {
+  if (!mtx) return -1;
+  callback disp = display;
+  int row, col;
+  node * temp;
+  for (row = 1; row <= mtx->rows; row++) {
+    for (col = 1; col <= mtx->cols; col++) {
+      // Print the floating-point element with
+      //  - either a - if negative or a space if positive
+      //  - at least 3 spaces before the .
+      //  - precision to the hundredths place
+      printf("Row: %i \nCol: %i \n",row, col);
+      traverse(getCell(mtx,row,col),disp);
+      printf("\n");
+    }
+    // separate rows by newlines
+    printf("\n");
+  }
+  return 0;
+}
+
+void printCell(cell_matrix * mtx, int row, int col){
+  callback disp = display;
+  printf("Row: %i \nCol: %i \n",row, col);
+  traverse(getCell(mtx,row,col),disp);
+  printf("\n");
+}
+
+int ListLength(node * head){
+  int len = 1;
+  while((head=head->next)){
+    len++;
+  }
+  return len;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//----------------------------------------------------------
 
 matrix * newMatrix(int rows, int cols) {
   if (rows <= 0 || cols <= 0) return NULL;
@@ -622,6 +837,17 @@ node* reverse(node* head)
     head = prev;
     return head;
 }
+
+
+int getLinkedElement(node * head, int element){
+  node * temp = head;
+  for(int i = 1; i < element; i++){
+    if(temp->next){
+      temp = temp->next;
+    }
+  }
+  return temp->data;
+}
 /*
     display the menu
 */
@@ -641,4 +867,286 @@ void menu()
     printf("10.Reverse the linked list\n");
     printf("-1.quit\n");
 
+}
+
+
+
+
+
+
+node ** create_buchi(node ** trans) {
+  int N_ap = 6;
+  char * alphabet[N_ap];
+  char * power_set[(int)(pow(2,N_ap))];
+  getAlpha(alphabet, N_ap);
+  getPowerSet(power_set,alphabet,N_ap);
+
+  FILE *stream;
+
+  char BUCH_AUT[100000];
+  char* STATE_NAMES[50];
+  int alpha_len = 6;
+  int sn_count = getStateNames(stream, BUCH_AUT, STATE_NAMES);
+
+  //-----------------------------------------------------
+
+
+  FILE *stream2;
+  char *line2 = NULL;
+  size_t len2 = 0;
+  size_t read2;
+
+  stream2 = fopen("LTLOUTPUT.txt", "r");
+
+  if (stream2 == NULL)
+    exit(EXIT_FAILURE);
+  int begin2 = 0;
+
+  int sn_count2 = -1;
+  int end_trans = 0;
+  char *token;
+
+  callback disp = display;
+  trans = (node**)malloc(sn_count*sn_count*sizeof(node * ));
+  for(int i = 0; i < sn_count*sn_count; i++){
+    trans[i] = NULL;
+  }
+  int trans_entry;
+  node * curr_trans;
+  int count = 0;
+
+  //----------------------------------------------------------
+  while ((read2 = getline(&line2, &len2, stream2)) != -1) {
+    if(strstr(line2,"Buchi automaton after simplification")!= NULL & line2[0] == 'B'){
+      begin2 = 1;
+    }
+
+    if(begin2 == 1 & strstr(line2, "never {")!= NULL){
+      begin2 = 0;
+    }
+    if(begin2 == 1){
+      if(strstr(line2, "state")){
+        sn_count2++;
+      }
+      else if(sn_count2 >= 0){
+        printf("%s%i\n",line2 ,sn_count2+1);
+        char * end_state = strstr(line2, "->");
+        if(end_state){
+          printf("%s",end_state+3);
+          for(int i = 0; i < sn_count; i++){
+            if(strstr(end_state+3,STATE_NAMES[i])){
+              end_trans = i;
+              printf("%i\n",i);
+            }
+          }
+          printf("%s\n","av" );
+
+          count = 0;
+          printf("%i\n",sn_count2 * sn_count +  end_trans - 1);
+          trans_entry = sn_count2 * sn_count +  end_trans ;
+          curr_trans = trans[trans_entry];
+          printf("%s\n","av" );
+          token = strtok(line2, " & ");
+          while( token != NULL )
+          {
+            token[2] = '\0';
+            if(token[0] == 'p'){
+              if(count == 0 & trans[trans_entry] == NULL){
+                for(int i = 0; i < (int)pow(2,N_ap); i++){
+                  if(strstr(power_set[i], token)){
+                      if(search(trans[trans_entry],i) == NULL) {
+                        trans[trans_entry] = prepend(trans[trans_entry],i);
+                      }
+
+                        traverse(trans[trans_entry],disp);
+
+                      printf("\n");
+                    }
+                  }
+                  count++;
+                }
+
+                else if(count != 0){
+                  printf("%s\n","MADE" );
+                  reduce_list(trans[trans_entry],power_set,token);
+                  printf("%s\n","MADE" );
+
+                  count++;
+                  printf("%c\n", 'd');
+                }
+                else if (trans){
+                  for(int i = 0; i < (int)pow(2,N_ap); i++){
+                    if(strstr(power_set[i], token)){
+                        if(search(trans[trans_entry],i) == NULL) {
+                          trans[trans_entry] = prepend(trans[trans_entry],i);
+                        }
+
+                          traverse(trans[trans_entry],disp);
+
+                        printf("\n");
+                      }
+                    }
+                }
+
+              }
+              traverse(trans[trans_entry],disp);
+              printf("%s\n", token);
+
+            if(token[0] == '!' & token[1] == 'p'){
+              printf("Not a P");
+            }
+            else if(line2[0] != 'p' & line2[0] != '!'){
+              for(int i = 0; i < pow(2,N_ap); i++){
+                if(search(trans[trans_entry],i+1) == NULL){
+                  trans[trans_entry] = prepend(trans[trans_entry],i+1);
+                }
+              }
+            }
+            token = strtok(NULL, " & ");
+          }
+        }
+      }
+    }
+  }
+
+  for(int i = 0; i < 13; i++){
+    printf("%s %i\n",STATE_NAMES[i], i+1);
+  }
+
+
+  for(int i = 0; i < 30; i++){
+    printf("\n");
+  }
+
+  for(int i = 0; i < sn_count; i++){
+    for(int j = 0; j < sn_count; j++){
+      if(trans[i*sn_count + j]){
+        printf("%i,%i   :    ",i+1,j+1);
+        trans[i*sn_count + j] = insertion_sort(trans[i*sn_count + j]);
+        //traverse(trans[i*sn_count + j],disp);
+        printf("\n\n\n");
+      }
+
+    }
+
+  }
+  for(int i = 0; i < sn_count; i++){
+    for(int j = 0; j < sn_count; j++){
+      if(trans[i*sn_count + j]){
+        printf("%i,%i   :    ",i+1,j+1);
+        //trans[i*sn_count + j] = insertion_sort(trans[i*sn_count + j]);
+        traverse(trans[i*sn_count + j],disp);
+        printf("\n\n\n");
+      }
+
+    }
+
+  }
+  return trans;
+
+
+
+
+
+}
+
+
+
+
+void reduce_list(node * head, char ** power_set, char * token){
+  node* cursor = head;
+  node * temp;
+  while(cursor != NULL)
+  {
+    if(strstr(power_set[cursor->data], token) == NULL){
+      temp = cursor;
+      cursor = remove_any(head,temp);
+    }
+      cursor = cursor->next;
+  }
+}
+
+
+
+
+int getStateNames(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES){
+
+  char *line = NULL;
+  size_t len = 0;
+  size_t read;
+  stream = fopen("LTLOUTPUT.txt", "r");
+
+  if (stream == NULL)
+    exit(EXIT_FAILURE);
+  int begin = 0;
+
+  //Read in the buchi automation after simplification and State names
+  int prev_len = 0;
+  int sn_count = 0;
+  while ((read = getline(&line, &len, stream)) != -1) {
+    if(strstr(line,"Buchi automaton after simplification")!= NULL & line[0] == 'B'){
+      begin = 1;
+    }
+
+    if(begin == 1 & strstr(line, "never {")!= NULL){
+      begin = 0;
+    }
+    if(begin == 1){
+
+      //printf("%s", strstr(line,"state"));
+      strncpy(&BUCH_AUT[prev_len], line, read);
+      prev_len += read;
+      if(strstr(line, "state")!=NULL){
+        STATE_NAMES[sn_count] = (char *)malloc(read*sizeof(char));
+        strncpy(STATE_NAMES[sn_count], &line[6],read-6);
+        //printf("%s\n", STATE_NAMES[sn_count]);
+        sn_count++;
+      }
+    }
+  }
+  free(line);
+  fclose(stream);
+  return sn_count;
+}
+
+void getAlpha(char ** alpha, int N_ap) {
+  for(int i = 0; i < N_ap; i++){
+    alpha[i] = (char *)malloc((i/10)*sizeof(char));
+    sprintf(alpha[i], "p%d", i+1);
+  }
+}
+
+void getPowerSet(char ** power_set, char ** alpha, int N_ap){
+  char temp[N_ap];
+  for(int i = 0; i < pow(2,N_ap); i++){
+    dec2bin(temp, i, N_ap-1);
+    power_set[i] = (char *)malloc(20 * sizeof(char));
+    for(int j = 0; j < N_ap; j++){
+      if(temp[N_ap-j-1] == '1'){
+        strncpy(&power_set[i][strlen(power_set[i])], alpha[j],2);
+      }
+    }
+  }
+}
+
+void dec2bin(char* arry, int dec, int length){
+   int i = 0;
+   for(i = length; i >= 0; i--){
+     if((dec & (1 << i)) != 0){
+       sprintf(&arry[length-i], "%d", 1);
+     }else{
+       sprintf(&arry[length-i], "%d", 0);
+     }
+   }
+}
+
+int unique(int * array, int num, int count){
+  if(array == NULL){return 1;}
+  int uniq = 1;
+  for(int i = 0; i <= count; i++){
+    if(array[i] == num){
+      return 0;
+    }
+  }
+  return uniq;
 }
