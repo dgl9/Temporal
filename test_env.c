@@ -80,6 +80,25 @@ int main() {
   node * Ty = create(-1,NULL);
   uniqueAppendList(Ty,TyAdd,3);
   printMatrix(a1);
-  DistanceMatrix(a1,Tx,Ty,10000);
+  matrix * d = DistanceMatrix(a1,Tx,Ty,10000);
+  printMatrix(d);
+
+
+  int N_p = 7;
+  Buchi * x;
+  FILE *stream;
+  char BUCH_AUT[100000];
+  char* STATE_NAMES[50];
+  int sn_count = getStateNames(stream, BUCH_AUT, STATE_NAMES);
+  x = Buchi_Struct();
+  printf("\n\n\n\n");
+  printCellMatrix(x->Trans);
+  printf("\n\n\n\n");
+  traverse(x->S0,disp);
+  printf("\n\n\n\n");
+  traverse(x->S,disp);
+  printf("\n\n\n\n");
+  traverse(x->F,disp);
+
   return 0;
 }

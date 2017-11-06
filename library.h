@@ -20,6 +20,13 @@ typedef struct{
   node ** data;
 } cell_matrix;
 
+typedef struct{
+  cell_matrix * Trans;
+  node * S;
+  node * S0;
+  node * F;
+} Buchi;
+
 
 
 
@@ -30,7 +37,6 @@ int deleteCellMatrix(cell_matrix * mtx);
   mtx->data[(col-1) * mtx->rows + (row-1)]
 
 cell_matrix * copyCellMatrix(cell_matrix * mtx); //copies one matrix into another
-int setCell(cell_matrix * mtx, int row, int col, int val);
 node * getCell(cell_matrix * mtx, int row, int col);
 int printCellMatrix(cell_matrix * mtx);
 void printCell(cell_matrix * mtx, int row, int col);
@@ -39,13 +45,15 @@ void uniqueAppendToCell(cell_matrix * mtx, int row, int col, int val);
 void SetCell(cell_matrix * mtx, int row, int col, int val);
 int ListLength(node * head);
 void uniqueAppendList(node * head, int * nums, int amnt);
+node * AppendList(node * head, int * nums, int amnt);
 node * ismember(node * in, node * out);
 int isempty(node* head);
 int check_row(matrix * A, matrix * B, int rowA, int rowB);
 node * ismemberRows(matrix * A, matrix * B);
 int nonZeroAmnt(node * in);
 matrix * DistanceMatrix(matrix * Trans, node * Tx, node * Ty, int BigNum);
-
+node * sampleReachablePTSpointTree(matrix * Qpba, int N, matrix * Tadj, node * Tx, node * Ty, node * TQ,int ind);
+node * observeInDiscreteEnvironment(int N, int N_p, cell_matrix * AP, node * xNew,int epsilon);
 
 
 matrix * newMatrix(int rows, int cols);
@@ -172,3 +180,4 @@ int getStateNames(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES);
 int unique(int * array, int num, int count);
 void reduce_list(node * head, char ** power_set, char * token);
 node ** create_buchi(node ** trans);
+Buchi * Buchi_Struct();
