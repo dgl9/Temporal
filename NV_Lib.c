@@ -25,8 +25,15 @@ matrix * DistanceMatrix(matrix * Trans, node * Tx, node * Ty, int BigNum){
       int x2 = getLinkedElement(Tx,j);
       int y2 = getLinkedElement(Ty,j);
       printf("Loc1 : %i Loc2 : %i\nX1 : %i Y1 : %i\nX2 : %i Y2 : %i\n", i,j,x1,y1,x2,y2);
-      printf("Distance : %f\n\n", CELL(Trans,i,j) * (pow(pow((x1-x2),2) + pow((y1-y2),2), 0.5 )));
+      if(CELL(Trans,i,j) == 0){
+        CELL(dist,i,j) = BigNum;
+      }
+      else{
+        CELL(dist,i,j) = (int)(CELL(Trans,i,j) * (pow( pow((x1-x2),2) + pow((y1-y2),2) , 0.5 )));
+      }
+      printf("Distance : %i\n\n", (int)(CELL(Trans,i,j) * (pow(pow((x1-x2),2) + pow((y1-y2),2), 0.5 ))));
     }
   }
+  return dist;
 
 }

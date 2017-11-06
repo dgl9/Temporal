@@ -11,9 +11,52 @@
 
 //----------------------------------------------------------
 
+node * observeInDiscreteEnvironment(int N, int N_p, cell_matrix * AP, node * xNew,int epsilon){
+  node * sat = NULL;
+  node * robots;
+  int checkAP;
+  int rbt;
+  for(int ap = 1; ap <= N_p; ap++){
+    robots = getCell(AP,ap,N+2);
+    checkAP = 0;
+    for(int indexRbt = 1; indexRbt <= ListLength(robots); indexRbt ++){
+      rbt = getLinkedElement(robots,indexRbt);
+      if(getLinkedElement(xNew,rbt) == getCell(AP,ap,rbt)->data){
+        checkAP ++;
+      }
+    }
+    if(checkAP == ListLength(robots)){
+      sat = append(sat,getCell(AP,ap,N+1)->data);
+    }
 
+  }
+  if(!sat){
+    sat = append(sat,pow(2,N_p));
+  }
+  return sat;
+}
 
+node * sampleReachablePTSpointTree(matrix * Qpba, int N, matrix * Tadj, node * Tx, node * Ty, node * TQ,int ind){
+  node * xRand = NULL;
+  callback disp = display;
+  int pickInd = (rand()%(ind-1)) + 1;
+  printf("%i\n", pickInd);
+  node * reachable = NULL;
+  for(int i = 1; i <= N; i++){
+    for(int j = 1; j <= N; j++){
+      if(CELL(Tadj,i,j)){
+        reachable = append(reachable,j);
+      }
+    }
+    traverse(reachable,disp);
+    xRand = append(xRand, getLinkedElement(reachable,rand()%ListLength(reachable) + 1));
+    dispose(reachable);
+  }
+  printf("\n\n\n");
+  traverse(xRand,disp);
+  return xRand;
 
+}
 
 
 
@@ -163,6 +206,19 @@ void uniqueAppendList(node * head, int * nums, int amnt){
     temp++;
   }
 }
+
+
+node * AppendList(node * head, int * nums, int amnt){
+  if(!nums) return NULL;
+  int * temp = nums;
+  for(int i = 0; i < amnt; i++){
+    head = append(head,*temp);
+    temp++;
+  }
+  return head;
+}
+
+
 
 node * getCell(cell_matrix * mtx, int row, int col) {
   if (!mtx) return NULL;
@@ -539,7 +595,7 @@ node* prepend(node* head,int data)
 node* append(node* head, int data)
 {
     if(head == NULL)
-        return NULL;
+        return create(data,NULL);
     /* go to the last node */
     node *cursor = head;
     while(cursor->next != NULL)
@@ -1043,11 +1099,252 @@ node ** create_buchi(node ** trans) {
 
   }
   return trans;
+}
 
 
 
 
 
+
+
+void getAlpha(char ** alpha, int N_ap) {
+  for(int i = 0; i < N_ap; i++){
+    alpha[i] = (char *)malloc((i/10)*sizeof(char));
+    sprintf(alpha[i], "p%d", i+1);
+  }
+}
+
+void getPowerSet(char ** power_set, char ** alpha, int N_ap){
+  char temp[N_ap];
+  for(int i = 0; i < pow(2,N_ap); i++){
+    dec2bin(temp, i, N_ap-1);
+    power_set[i] = (char *)malloc(20 * sizeof(char));
+    for(int j = 0; j < N_ap; j++){
+      if(temp[N_ap-j-1] == '1'){
+        strncpy(&power_set[i][strlen(power_set[i])], alpha[j],2);
+      }
+    }
+  }
+}
+
+void dec2bin(char* arry, int dec, int length){
+   int i = 0;
+   for(i = length; i >= 0; i--){
+     if((dec & (1 << i)) != 0){
+       sprintf(&arry[length-i], "%d", 1);
+     }else{
+       sprintf(&arry[length-i], "%d", 0);
+     }
+   }
+}
+
+int unique(int * array, int num, int count){
+  if(array == NULL){return 1;}
+  int uniq = 1;
+  for(int i = 0; i <= count; i++){
+    if(array[i] == num){
+      return 0;
+    }
+  }
+  return uniq;
+}
+
+
+
+
+
+
+
+
+Buchi * Buchi_Struct() {
+  Buchi * B1 = (Buchi * )malloc(sizeof(Buchi));
+  int N_ap = 7;
+  char * alphabet[N_ap];
+  char * power_set[(int)(pow(2,N_ap))];
+  getAlpha(alphabet, N_ap);
+  getPowerSet(power_set,alphabet,N_ap);
+
+  FILE *stream;
+
+  char BUCH_AUT[100000];
+  char* STATE_NAMES[50];
+  int alpha_len = 7;
+  int sn_count = getStateNames(stream, BUCH_AUT, STATE_NAMES);
+
+  //-----------------------------------------------------
+
+
+  FILE *stream2;
+  char *line2 = NULL;
+  size_t len2 = 0;
+  size_t read2;
+
+  stream2 = fopen("LTLOUTPUT.txt", "r");
+
+  if (stream2 == NULL)
+    exit(EXIT_FAILURE);
+  int begin2 = 0;
+
+  int sn_count2 = -1;
+  int end_trans = 0;
+  char *token;
+
+  callback disp = display;
+
+  B1->Trans = newCellMatrix(sn_count,sn_count);
+  node ** trans = B1->Trans->data;
+  B1->F = NULL;
+  B1->S0 = NULL;
+  B1->S = NULL;
+  for(int i = 1; i <= sn_count; i++){
+    B1->S = append(B1->S, i);
+  }
+
+  int trans_entry;
+  node * curr_trans;
+  int count = 0;
+
+  //----------------------------------------------------------
+  while ((read2 = getline(&line2, &len2, stream2)) != -1) {
+    if(strstr(line2,"Buchi automaton after simplification")!= NULL & line2[0] == 'B'){
+      begin2 = 1;
+    }
+
+    if(begin2 == 1 & strstr(line2, "never {")!= NULL){
+      begin2 = 0;
+    }
+    if(begin2 == 1){
+      if(strstr(line2, "state")){
+        if(strstr(line2, "init")){
+          if(sn_count2 == -1){
+            B1->S0 = append(B1->S0, 1);
+          }
+          else{
+            B1->S0 = append(B1->S0, sn_count2);
+          }
+
+        }
+        if(strstr(line2, "accept")){
+          B1->F = append(B1->F, sn_count2+2);
+        }
+        sn_count2++;
+      }
+      else if(sn_count2 >= 0){
+        printf("%s%i\n",line2 ,sn_count2+1);
+        char * end_state = strstr(line2, "->");
+        if(end_state){
+          printf("%s",end_state+3);
+          for(int i = 0; i < sn_count; i++){
+            if(strstr(end_state+3,STATE_NAMES[i])){
+              end_trans = i;
+              printf("%i\n",i);
+            }
+          }
+          printf("%s\n","av" );
+
+          count = 0;
+          printf("%i\n",sn_count2 * sn_count +  end_trans - 1);
+          trans_entry = sn_count2 * sn_count +  end_trans ;
+          curr_trans = trans[trans_entry];
+          printf("%s\n","av" );
+          token = strtok(line2, " & ");
+          while( token != NULL )
+          {
+            token[2] = '\0';
+            if(token[0] == 'p'){
+              if(count == 0 & trans[trans_entry] == NULL){
+                for(int i = 0; i < (int)pow(2,N_ap); i++){
+                  if(strstr(power_set[i], token)){
+                      if(search(trans[trans_entry],i) == NULL) {
+                        trans[trans_entry] = prepend(trans[trans_entry],i);
+                      }
+
+                        traverse(trans[trans_entry],disp);
+
+                      printf("\n");
+                    }
+                  }
+                  count++;
+                }
+
+                else if(count != 0){
+                  printf("%s\n","MADE" );
+                  reduce_list(trans[trans_entry],power_set,token);
+                  printf("%s\n","MADE" );
+
+                  count++;
+                  printf("%c\n", 'd');
+                }
+                else if (trans){
+                  for(int i = 0; i < (int)pow(2,N_ap); i++){
+                    if(strstr(power_set[i], token)){
+                        if(search(trans[trans_entry],i) == NULL) {
+                          trans[trans_entry] = prepend(trans[trans_entry],i);
+                        }
+
+                          traverse(trans[trans_entry],disp);
+
+                        printf("\n");
+                      }
+                    }
+                }
+
+              }
+              traverse(trans[trans_entry],disp);
+              printf("%s\n", token);
+
+            if(token[0] == '!' & token[1] == 'p'){
+              printf("Not a P");
+            }
+            else if(line2[0] != 'p' & line2[0] != '!'){
+              for(int i = 0; i < pow(2,N_ap); i++){
+                if(search(trans[trans_entry],i+1) == NULL){
+                  trans[trans_entry] = prepend(trans[trans_entry],i+1);
+                }
+              }
+            }
+            token = strtok(NULL, " & ");
+          }
+        }
+      }
+    }
+  }
+
+  for(int i = 0; i < 13; i++){
+    printf("%s %i\n",STATE_NAMES[i], i+1);
+  }
+
+
+  for(int i = 0; i < 30; i++){
+    printf("\n");
+  }
+
+  for(int i = 0; i < sn_count; i++){
+    for(int j = 0; j < sn_count; j++){
+      if(trans[i*sn_count + j]){
+        printf("%i,%i   :    ",i+1,j+1);
+        trans[i*sn_count + j] = insertion_sort(trans[i*sn_count + j]);
+        //traverse(trans[i*sn_count + j],disp);
+        printf("\n\n\n");
+      }
+
+    }
+
+  }
+  for(int i = 0; i < sn_count; i++){
+    for(int j = 0; j < sn_count; j++){
+      if(trans[i*sn_count + j]){
+        printf("%i,%i   :    ",i+1,j+1);
+        //trans[i*sn_count + j] = insertion_sort(trans[i*sn_count + j]);
+        traverse(trans[i*sn_count + j],disp);
+        printf("\n\n\n");
+      }
+
+    }
+
+  }
+  B1->Trans->data = trans;
+  return B1;
 }
 
 
@@ -1107,46 +1404,4 @@ int getStateNames(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES){
   free(line);
   fclose(stream);
   return sn_count;
-}
-
-void getAlpha(char ** alpha, int N_ap) {
-  for(int i = 0; i < N_ap; i++){
-    alpha[i] = (char *)malloc((i/10)*sizeof(char));
-    sprintf(alpha[i], "p%d", i+1);
-  }
-}
-
-void getPowerSet(char ** power_set, char ** alpha, int N_ap){
-  char temp[N_ap];
-  for(int i = 0; i < pow(2,N_ap); i++){
-    dec2bin(temp, i, N_ap-1);
-    power_set[i] = (char *)malloc(20 * sizeof(char));
-    for(int j = 0; j < N_ap; j++){
-      if(temp[N_ap-j-1] == '1'){
-        strncpy(&power_set[i][strlen(power_set[i])], alpha[j],2);
-      }
-    }
-  }
-}
-
-void dec2bin(char* arry, int dec, int length){
-   int i = 0;
-   for(i = length; i >= 0; i--){
-     if((dec & (1 << i)) != 0){
-       sprintf(&arry[length-i], "%d", 1);
-     }else{
-       sprintf(&arry[length-i], "%d", 0);
-     }
-   }
-}
-
-int unique(int * array, int num, int count){
-  if(array == NULL){return 1;}
-  int uniq = 1;
-  for(int i = 0; i <= count; i++){
-    if(array[i] == num){
-      return 0;
-    }
-  }
-  return uniq;
 }
