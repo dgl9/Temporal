@@ -58,8 +58,8 @@ int main() {
   FILE *stream;
   char BUCH_AUT[100000];
   char* STATE_NAMES[50];
-  int sn_count = getStateNames(stream, BUCH_AUT, STATE_NAMES);
-  B1 = Buchi_Struct();
+  int sn_count = getStateNamesNew(stream, BUCH_AUT, STATE_NAMES);
+  B1 = Buchi_Struct_New();
   printf("\n\n\n\n");
   printCellMatrix(B1->Trans);
   printf("\n\n\n\n");
@@ -157,13 +157,6 @@ int main() {
     traverse(sat,disp);
   }
 
-  printCellMatrix(B1->Trans);
-  printf("\n\n\n\n");
-  traverse(B1->S0,disp);
-  printf("\n\n\n\n");
-  traverse(B1->S,disp);
-  printf("\n\n\n\n");
-  traverse(B1->F,disp);
 
 
 
