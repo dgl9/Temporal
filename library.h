@@ -29,6 +29,17 @@ typedef struct{
 
 
 
+int getStateNamesNew(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES);
+int on_off(char * line, int curr);
+Buchi * Buchi_Struct_New();
+int which_state_start(char * line, int curr);
+int which_state_end(char * line, char ** state_names, int sn_count);
+node * intersection(node * A, node * B);
+node * power_set_indList(char * token, char ** power_set, int N_ap);
+node * ListUnion(node * A, node * B);
+node * loopIntersect(char * line, node * curr_list, char ** power_set, int N_ap);
+
+
 
 cell_matrix * newCellMatrix(int rows, int cols);
 int deleteCellMatrix(cell_matrix * mtx);
