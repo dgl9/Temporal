@@ -151,12 +151,20 @@ int main() {
   matrix * rejectInf= newMatrix(1,nMaxPre);
   int f = 1;
 
+  int qBPrev;
+
   for(int n = 1; n <= nMaxPre-1; n++){
     node * xNew = sampleReachablePTSpointTree(Qpba, N, Tadj, Tx, Ty,TQ,ind); //FIGURE THESE OUT TOMORROW
     node * sat = observeInDiscreteEnvironment(N,N_p,AP,xNew,epsilon);
     traverse(sat,disp);
-  }
+    setElement(reject,1,n,0);
 
+    for(int q2 = 1; q2 <= ListLength(B1->S); q2++){
+      qBPrev = getLinkedElement(B1->S, q2);
+      printf("\n%i\n", qBPrev);
+
+    }
+  }
 
 
 
