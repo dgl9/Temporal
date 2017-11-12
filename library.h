@@ -38,7 +38,7 @@ node * intersection(node * A, node * B);
 node * power_set_indList(char * token, char ** power_set, int N_ap);
 node * ListUnion(node * A, node * B);
 node * loopIntersect(char * line, node * curr_list, char ** power_set, int N_ap);
-
+node * findBuchiNeighbors(int qBnext,matrix * neig);
 
 
 cell_matrix * newCellMatrix(int rows, int cols);

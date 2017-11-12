@@ -58,6 +58,16 @@ node * sampleReachablePTSpointTree(matrix * Qpba, int N, matrix * Tadj, node * T
 
 }
 
+node * findBuchiNeighbors(int qBnext,matrix * neig){
+  node * potench = NULL;
+  for(int i = 1; i <= neig->rows; i++){
+    if(ELEM(neig,i,qBnext) == 1){
+      potench = append(potench,i);
+    }
+  }
+  return potench;
+}
+
 
 
 
