@@ -19,6 +19,7 @@ int main() {
       ELEM(Tadj,i+1,j+1) = T1[i*9 + j];
     }
   }
+
   printMatrix(Tadj);
   int TQ1[] = {1,2,3,4,5,6,7,8,9};
   int Tx1[] = {0, 0, 4, 6, 8, 8, 8, 4, 10};
@@ -60,6 +61,16 @@ int main() {
   char* STATE_NAMES[50];
   int sn_count = getStateNamesNew(stream, BUCH_AUT, STATE_NAMES);
   B1 = Buchi_Struct_New();
+  matrix * neig = newMatrix(sn_count,sn_count);
+
+  for(int j1 = 1; j1 <= sn_count; j1++){
+    for(int j2 = 1; j2 <= sn_count; j2++){
+      if(CELL(B1->Trans,j1,j2)){
+        setElement(neig,j1,j2,1);
+      }
+    }
+  }
+
   printf("\n\n\n\n");
   printCellMatrix(B1->Trans);
   printf("\n\n\n\n");
@@ -150,21 +161,67 @@ int main() {
   matrix * rejectExist= newMatrix(1,nMaxPre);
   matrix * rejectInf= newMatrix(1,nMaxPre);
   int f = 1;
+  node * candParents = NULL;
+  node * xNew = NULL;
+  node * sat = NULL;
+  node * indices = NULL;
 
+  int qBnext;
   int qBPrev;
 
   for(int n = 1; n <= nMaxPre-1; n++){
-    node * xNew = sampleReachablePTSpointTree(Qpba, N, Tadj, Tx, Ty,TQ,ind); //FIGURE THESE OUT TOMORROW
-    node * sat = observeInDiscreteEnvironment(N,N_p,AP,xNew,epsilon);
+    dispose(xNew);
+    xNew = NULL;
+    dispose(sat);
+    sat = NULL;
+    xNew = sampleReachablePTSpointTree(Qpba, N, Tadj, Tx, Ty,TQ,ind); //FIGURE THESE OUT TOMORROW
+    sat = observeInDiscreteEnvironment(N,N_p,AP,xNew,epsilon);
     traverse(sat,disp);
     setElement(reject,1,n,0);
 
     for(int q2 = 1; q2 <= ListLength(B1->S); q2++){
-      qBPrev = getLinkedElement(B1->S, q2);
-      printf("\n%i\n", qBPrev);
+      qBnext = getLinkedElement(B1->S, q2);
+      printf("\n%i\n", qBnext);
+      dispose(candParents);
+      candParents = NULL;
+      candParents = findBuchiNeighbors(qBnext,neig);
+
+      dispose(indices);
+      indices = NULL;
+
+      for(int jj = 1; jj <= ListLength(candParents); jj++){
+        qBPrev = getLinkedElement(candParents,jj);
+        for(int i = 1; i <= ind; i++){
+          if(qBPrev == ELEM(Qpba,i,N+1)){
+            indices = append(indices,i);
+          }
+        }
+
+      }
+
+      if(ListLength(indices)){
+        for(int i = 1; i <=ListLength(indices); i++){
+          find cost
+        }
+      }
+        // for jj=1:length(candParents)%for each possible qBprev
+        //     qBPrev=candParents(jj);
+        //     indices=[indices;find(Qpba(:,N+1)==qBPrev)];%indices of states in Qpba that point at states in Qba that reach the Buchi state qBnext
+        // end
+        // if ~isempty(indices)
+        //     % Find the nearest node to xNew among all states in Qpba q=(?,qBprev):
+        //     Qpts=Qpba(indices,1:N);
+        //     Qb=Qpba(indices,N+1);
+        //     %Given qNext=(xNew,qBnext), we have to determine: qPrev=(xPrev(?), qBPrev(?)):
+        //     %[xPrev,indexQpts]=findPrevPTSpoint(Qpts,xNew,Dist,BigNum);%indexQpts points at the indexQpts-th state of subspace [Qpts,Qb]
+        //     [xPrev,indexQpts]=findPrevPTSpoint_star_V2(Qpts,Qb,Qpba,xNew,qBnext,Dist,BigNum,parent,B1,AP,N_p,epsilon);
+        //     qBPrev=Qb(indexQpts); %goal
+        //     qPrev=[xPrev,qBPrev];%parent %goal
 
     }
   }
+
+  printMatrix(neig);
 
 
 
