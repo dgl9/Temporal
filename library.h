@@ -27,8 +27,9 @@ typedef struct{
   node * F;
 } Buchi;
 
-
-
+matrix * Qb(matrix * Qpba, node * indices, int N);
+matrix * Qpts(matrix * Qpba, node * indices, int N);
+node * findPrevPTSpoint(matrix * Qpts, node * xNew,matrix * Dist,int BigNum);
 int getStateNamesNew(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES);
 int on_off(char * line, int curr);
 Buchi * Buchi_Struct_New();

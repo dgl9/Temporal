@@ -168,6 +168,8 @@ int main() {
 
   int qBnext;
   int qBPrev;
+  matrix * QPTS;
+  matrix * QB;
 
   for(int n = 1; n <= nMaxPre-1; n++){
     dispose(xNew);
@@ -199,10 +201,21 @@ int main() {
 
       }
 
-      if(ListLength(indices)){
-        for(int i = 1; i <=ListLength(indices); i++){
-          find cost
-        }
+      if(indices){
+        printf("DAVID\n");
+        traverse(indices,disp);
+        printf("DAVID\n");
+        deleteMatrix(QPTS);
+        QPTS = NULL;
+        deleteMatrix(QB);
+        QB = NULL;
+
+        QPTS = Qpts(Qpba,indices,N);
+
+        QB = Qb(Qpba,indices,N);
+        printMatrix(QPTS);
+        printMatrix(QB);
+
       }
         // for jj=1:length(candParents)%for each possible qBprev
         //     qBPrev=candParents(jj);

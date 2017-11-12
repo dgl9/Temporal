@@ -11,6 +11,34 @@
 
 //----------------------------------------------------------
 
+matrix * Qpts(matrix * Qpba, node * indices, int N){
+  matrix * result = newMatrix(ListLength(indices), N);
+  int temp_ind;
+  for(int row = 1; row <= ListLength(indices); row++ )
+    for(int col = 1; col<= N; col++){
+      temp_ind = getLinkedElement(indices,row);
+      printf("\n");
+      printf("%i\n",ELEM(Qpba,row,col) );
+      ELEM(result,row, col) = ELEM(Qpba, temp_ind,col);
+    }
+  return result;
+}
+
+
+matrix * Qb(matrix * Qpba, node * indices, int N){
+  matrix * result = newMatrix(ListLength(indices), 1);
+  int temp_ind;
+  for(int row = 1; row <= ListLength(indices); row++){
+      temp_ind = getLinkedElement(indices,row);
+      printf("\n");
+
+      ELEM(result,row, 1) = ELEM(Qpba, temp_ind, N+1);
+  }
+  return result;
+}
+
+
+
 node * observeInDiscreteEnvironment(int N, int N_p, cell_matrix * AP, node * xNew,int epsilon){
   node * sat = NULL;
   node * robots;
