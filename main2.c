@@ -60,7 +60,7 @@ int main() {
   char BUCH_AUT[100000];
   char* STATE_NAMES[50];
   int sn_count = getStateNamesNew(stream, BUCH_AUT, STATE_NAMES);
-  B1 = Buchi_Struct_New();
+  B1 = Buchi_Struct_New(7);
   matrix * neig = newMatrix(sn_count,sn_count);
 
   for(int j1 = 1; j1 <= sn_count; j1++){
@@ -133,10 +133,10 @@ int main() {
 
    //AP(7,N+2)={6};AP(8,N+2)={2};%AP(8,N+2)={[6,7]};%indices of rbts involved in satisfaction of an AP
   //-------------------------------------
-  int nMaxPre=1000;
+  int nMaxPre=400;
   int n = ListLength(B1->S)*(maxNum)*N;
-  matrix * parent=newMatrix(nMaxPre,1);
-  matrix * Qpba = newMatrix(nMaxPre,N+1);
+  matrix * parent=newMatrix(nMaxPre*10,1);
+  matrix * Qpba = newMatrix(nMaxPre*10,N+1);
   //initializing Qpba
 
   node * temp = x0;
@@ -151,43 +151,51 @@ int main() {
   float epsilon=0.1;
   int ind = 2;
   int stop=0;
-  matrix * CostNode= newMatrix(nMaxPre,1);
-  matrix * SizeTree= newMatrix(nMaxPre,1);
+  matrix * CostNode= newMatrix(nMaxPre*10,1);
+  matrix * SizeTree= newMatrix(nMaxPre*10,1);
   //==================Build Prefix part========================================
   int goal = B1->F->data;
   node * F;
-  matrix * reject = newMatrix(1,nMaxPre);
+  matrix * reject = newMatrix(1,nMaxPre*10);
   int sample=0;
-  matrix * rejectExist= newMatrix(1,nMaxPre);
-  matrix * rejectInf= newMatrix(1,nMaxPre);
+  matrix * rejectExist= newMatrix(1,nMaxPre*10);
+  matrix * rejectInf= newMatrix(1,nMaxPre*10);
   int f = 1;
   node * candParents = NULL;
   node * xNew = NULL;
   node * sat = NULL;
   node * indices = NULL;
+  node * qPrev;
+
+  matrix * QNext;
 
   int qBnext;
   int qBPrev;
   matrix * QPTS;
   matrix * QB;
+  int prevQPBAindex;
+  int newCost;
 
-  for(int n = 1; n <= nMaxPre-1; n++){
+
+
+  for(int n = 1; n <= nMaxPre-3; n++){
     dispose(xNew);
     xNew = NULL;
     dispose(sat);
     sat = NULL;
     xNew = sampleReachablePTSpointTree(Qpba, N, Tadj, Tx, Ty,TQ,ind); //FIGURE THESE OUT TOMORROW
     sat = observeInDiscreteEnvironment(N,N_p,AP,xNew,epsilon);
-    traverse(sat,disp);
+    printf("SAT\n");
+    traverse(xNew,disp);
     setElement(reject,1,n,0);
 
     for(int q2 = 1; q2 <= ListLength(B1->S); q2++){
       qBnext = getLinkedElement(B1->S, q2);
-      printf("\n%i\n", qBnext);
+      printf("\nQQQNEE%i\n", qBnext);
       dispose(candParents);
       candParents = NULL;
       candParents = findBuchiNeighbors(qBnext,neig);
-
+      traverse(candParents,disp);
       dispose(indices);
       indices = NULL;
 
@@ -209,12 +217,55 @@ int main() {
         QPTS = NULL;
         deleteMatrix(QB);
         QB = NULL;
+        dispose(qPrev);
+        qPrev = NULL;
 
         QPTS = Qpts(Qpba,indices,N);
 
         QB = Qb(Qpba,indices,N);
-        printMatrix(QPTS);
-        printMatrix(QB);
+        //printMatrix(QPTS);
+        //printMatrix(QB);
+        prevQPBAindex = findPrevPTSpoint(QPTS,xNew,dist,BigNum,CostNode,indices);
+        //printMatrix(QPTS);
+        printf("prevQPBAindex%i\n", prevQPBAindex);
+        if(prevQPBAindex){
+
+          qPrev = BuildQPREV(QPTS,QB,prevQPBAindex);
+          printf("QPREV\n");
+          traverse(qPrev,disp);
+          printf("QPRV\n");
+          deleteMatrix(QNext);
+          QNext = BuildQNEXT(xNew,qBnext,N);
+          printf("QNEXT\n");
+          //printMatrix(QNext);
+          printf("QNEX\n");
+          printf("ismem\n");
+          printf("break\n");
+          printf("ismem\n");
+          printf("break\n");
+          //printMatrix(Qpba);
+          printf("AMOUNT OF INDS\n%i", ind);
+          printf("AMOUNT OF INDS\n");
+          if(!(ismemberRows(QNext,Qpba))){
+            if(search(CELL(B1->Trans,getLinkedElement(qPrev,N+1),qBnext),LLSUM(sat))){
+              printf("gotit\n");
+              for(int d = 1; d<= N+1; d++){
+                ELEM(Qpba,ind,d) = ELEM(QNext,1,d);
+              }
+              ELEM(parent,ind,1) = ismemberRows(linkedToMatrix(qPrev),Qpba)->data;
+              ELEM(CostNode,ind,1) = ELEM(CostNode,ELEM(parent,ind,1),1) + costTree(linkedToMatrix(qPrev),QNext,dist);
+
+              ind++;
+            }
+          }
+
+          else{
+            printf("nogood\n");
+          }
+        }
+
+
+
 
       }
         // for jj=1:length(candParents)%for each possible qBprev
@@ -232,11 +283,29 @@ int main() {
         //     qPrev=[xPrev,qBPrev];%parent %goal
 
     }
+
   }
+  // printMatrix(Qpba);
+  // printMatrix(parent);
+  // printMatrix(CostNode);
+  // printMatrix(neig);
+  // printMatrix(CostNode);
+  printCellMatrix(B1->Trans);
+  xNew = NULL;
+  xNew = append(xNew,1);
+  xNew = append(xNew,1);
+  xNew = append(xNew,1);
+  xNew = append(xNew,1);
+  xNew = append(xNew,3);
+  xNew = append(xNew,7);
+  xNew = append(xNew,6);
+  xNew = append(xNew,7);
+  xNew = append(xNew,2);
 
-  printMatrix(neig);
+  traverse(observeInDiscreteEnvironment(N,N_p,AP,xNew,epsilon),disp);
 
 
+  subprintMatrix(Qpba,ind);
 
   return 0;
 

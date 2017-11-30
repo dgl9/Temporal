@@ -37,3 +37,35 @@ matrix * DistanceMatrix(matrix * Trans, node * Tx, node * Ty, int BigNum){
   return dist;
 
 }
+
+
+
+
+node * BuildQPREV(matrix * QPTS,matrix * QB,int prevQPBAindex){
+  node * result = NULL;
+  for(int i = 1; i <= QPTS->cols; i++){
+    result = append(result, ELEM(QPTS,prevQPBAindex,i));
+  }
+  result = append(result, ELEM(QB,prevQPBAindex,1));
+  return result;
+
+}
+
+matrix * BuildQNEXT(node * xNew, int QbNext, int N){
+  matrix * QNext = newMatrix(1,N+1);
+  for(int z = 1; z <= N; z++){
+    ELEM(QNext,1,z) = getLinkedElement(xNew,z);
+  }
+  ELEM(QNext,1,N+1) = QbNext;
+  return QNext;
+}
+
+matrix * linkedToMatrix(node* linked){
+  matrix * result = newMatrix(1,ListLength(linked));
+  node * temp = linked;
+  for(int i = 1; i <= ListLength(linked); i++){
+    ELEM(result,1,i) = temp->data;
+    temp=temp->next;
+  }
+  return result;
+}

@@ -14,23 +14,74 @@
 matrix * Qpts(matrix * Qpba, node * indices, int N){
   matrix * result = newMatrix(ListLength(indices), N);
   int temp_ind;
-  for(int row = 1; row <= ListLength(indices); row++ )
+  for(int row = 1; row <= ListLength(indices); row++){
+    temp_ind = getLinkedElement(indices,row);
     for(int col = 1; col<= N; col++){
-      temp_ind = getLinkedElement(indices,row);
-      printf("\n");
-      printf("%i\n",ELEM(Qpba,row,col) );
       ELEM(result,row, col) = ELEM(Qpba, temp_ind,col);
     }
+  }
   return result;
 }
 
+void rewire(matrix * Qpba,matrix * parent,matrix * CostNode,matrix * Tadj,cell_matrix * AP,cell_matrix * Buchi,matrix * Dist, int ind, int N_p,int N){
+  node * xPrev = NULL;
+  int temp_cost;
+  node * sat;
+  for(int i = 1; i < ind; i++){
+
+    xPrev = NULL;
+    if(check_pts(Qpba,Tadj,ind,i))  {
+
+      for(int bot = 1; bot <= N; bot++){
+        xPrev = append(xPrev,ELEM(Qpba,i,bot));
+      }
+
+      sat = observeInDiscreteEnvironment(N,N_p,AP,xPrev, 0);
+      if(CELL(Buchi,ELEM(Qpba,ind,N+1),ELEM(Qpba,i,N+1))){
+        if(search(CELL(Buchi,ELEM(Qpba,ind,N+1),ELEM(Qpba,i,N+1)),LLSUM(sat))){
+          temp_cost = ELEM(CostNode,ind,1) + costTree(ind, i, Dist, Qpba);
+          if(temp_cost < ELEM(CostNode,i,1)){
+            ELEM(parent,i,1) = ind;
+            ELEM(CostNode,i,1) = temp_cost;
+          }
+        }
+      }
+    }
+    dispose(xPrev);
+  }
+}
+
+int check_pts(matrix * Qpba, matrix * Tadj, int qnew, int qb){
+  int feasible = 1;
+  int start;
+  int end;
+  for(int i =1; i <= Qpba->cols - 1; i++){
+    start = ELEM(Qpba,qnew,i);
+    end = ELEM(Qpba,qb,i);
+    //printf("%i %i\n", start,end);
+    if(!ELEM(Tadj,start,end)){
+      feasible = 0;
+    }
+  }
+  return feasible;
+}
+
+int LLSUM(node *head){
+  int sum = 0;
+  node * temp = head;
+  for(int i = 0; i < ListLength(head); i++){
+    sum += temp->data;
+    temp = temp->next;
+  }
+  return sum;
+}
 
 matrix * Qb(matrix * Qpba, node * indices, int N){
   matrix * result = newMatrix(ListLength(indices), 1);
   int temp_ind;
   for(int row = 1; row <= ListLength(indices); row++){
       temp_ind = getLinkedElement(indices,row);
-      printf("\n");
+      //printf("\n");
 
       ELEM(result,row, 1) = ELEM(Qpba, temp_ind, N+1);
   }
@@ -67,21 +118,26 @@ node * observeInDiscreteEnvironment(int N, int N_p, cell_matrix * AP, node * xNe
 node * sampleReachablePTSpointTree(matrix * Qpba, int N, matrix * Tadj, node * Tx, node * Ty, node * TQ,int ind){
   node * xRand = NULL;
   callback disp = display;
-  int pickInd = (rand()%(ind-1)) + 1;
-  printf("%i\n", pickInd);
+  int prevSpot;
+
   node * reachable = NULL;
   for(int i = 1; i <= N; i++){
-    for(int j = 1; j <= N; j++){
-      if(CELL(Tadj,i,j)){
+    prevSpot = ELEM(Qpba, ind - 1, i);
+    //printf("%i\n", prevSpot);
+    for(int j = 1; j <= Tadj->rows; j++){
+      if(CELL(Tadj,prevSpot,j)){
         reachable = append(reachable,j);
       }
     }
-    traverse(reachable,disp);
+    //printf("line%i\n",i );
+    //traverse(reachable,disp);
     xRand = append(xRand, getLinkedElement(reachable,rand()%ListLength(reachable) + 1));
+    //traverse(xRand,disp);
     dispose(reachable);
+    reachable = NULL;
   }
-  printf("\n\n\n");
-  traverse(xRand,disp);
+  //printf("\n\n\n");
+  //traverse(xRand,disp);
   return xRand;
 
 }
@@ -117,7 +173,7 @@ int nonZeroAmnt(node * in){
 int check_row(matrix * A, matrix * B, int rowA, int rowB){
   int row_equal = 1;
   for(int i = 1; i <= A->cols; i++){
-    if(CELL(A,rowA,i) != CELL(B,rowB,i)){
+    if(ELEM(A,rowA,i) != ELEM(B,rowB,i)){
       row_equal = 0;
     }
   }
@@ -355,13 +411,13 @@ matrix * kronProd(matrix * A, matrix * B){
       for(int k = 1; k <= rows_b; k++){
         for(int l = 1; l <= cols_b; l++){
           temp2 = ELEM(B,k,l);
-          printf("%i\n",temp1*temp2 );
+          //printf("%i\n",temp1*temp2 );
           setElement(final, (i-1)*rows_a + k, (j-1)*cols_a + l, temp1*temp2);
         }
       }
     }
   }
-  printMatrix(final);
+  //printMatrix(final);
   return final;
 }
 
@@ -450,6 +506,25 @@ int nCols(matrix * mtx, int * n) {
 /* Prints the matrix to stdout.  Returns 0 if successful
  * and -1 if mtx is NULL.
  */
+
+ int subprintMatrix(matrix * mtx,int rows) {
+   if (!mtx) return -1;
+
+   int row, col;
+   for (row = 1; row <= rows; row++) {
+     for (col = 1; col <= mtx->cols; col++) {
+       // Print the floating-point element with
+       //  - either a - if negative or a space if positive
+       //  - at least 3 spaces before the .
+       //  - precision to the hundredths place
+       printf("% 6.2i ", ELEM(mtx, row, col));
+     }
+     // separate rows by newlines
+     printf("\n");
+   }
+   return 0;
+ }
+
 int printMatrix(matrix * mtx) {
   if (!mtx) return -1;
 
@@ -932,6 +1007,13 @@ node* reverse(node* head)
     return head;
 }
 
+int printMatrixLine(matrix * mat, int line){
+  for(int i = 1; i <= mat->cols; i++){
+    printf("%i ", ELEM(mat,line,i));
+  }
+  printf("\n" );
+  return 1;
+}
 
 int getLinkedElement(node * head, int element){
   node * temp = head;
@@ -1023,23 +1105,23 @@ node ** create_buchi(node ** trans) {
         sn_count2++;
       }
       else if(sn_count2 >= 0){
-        printf("%s%i\n",line2 ,sn_count2+1);
+        //printf("%s%i\n",line2 ,sn_count2+1);
         char * end_state = strstr(line2, "->");
         if(end_state){
-          printf("%s",end_state+3);
+          //printf("%s",end_state+3);
           for(int i = 0; i < sn_count; i++){
             if(strstr(end_state+3,STATE_NAMES[i])){
               end_trans = i;
-              printf("%i\n",i);
+              //printf("%i\n",i);
             }
           }
-          printf("%s\n","av" );
+          //printf("%s\n","av" );
 
           count = 0;
-          printf("%i\n",sn_count2 * sn_count +  end_trans - 1);
+          //printf("%i\n",sn_count2 * sn_count +  end_trans - 1);
           trans_entry = sn_count2 * sn_count +  end_trans ;
           curr_trans = trans[trans_entry];
-          printf("%s\n","av" );
+          //printf("%s\n","av" );
           token = strtok(line2, " & ");
           while( token != NULL )
           {
@@ -1052,21 +1134,21 @@ node ** create_buchi(node ** trans) {
                         trans[trans_entry] = prepend(trans[trans_entry],i);
                       }
 
-                        traverse(trans[trans_entry],disp);
+                        //traverse(trans[trans_entry],disp);
 
-                      printf("\n");
+                      //printf("\n");
                     }
                   }
                   count++;
                 }
 
                 else if(count != 0){
-                  printf("%s\n","MADE" );
+                  //printf("%s\n","MADE" );
                   reduce_list(trans[trans_entry],power_set,token);
-                  printf("%s\n","MADE" );
+                  //printf("%s\n","MADE" );
 
                   count++;
-                  printf("%c\n", 'd');
+                  //printf("%c\n", 'd');
                 }
                 else if (trans){
                   for(int i = 0; i < (int)pow(2,N_ap); i++){
@@ -1075,19 +1157,19 @@ node ** create_buchi(node ** trans) {
                           trans[trans_entry] = prepend(trans[trans_entry],i);
                         }
 
-                          traverse(trans[trans_entry],disp);
+                          //traverse(trans[trans_entry],disp);
 
-                        printf("\n");
+                        //printf("\n");
                       }
                     }
                 }
 
               }
-              traverse(trans[trans_entry],disp);
-              printf("%s\n", token);
+              //traverse(trans[trans_entry],disp);
+              //printf("%s\n", token);
 
             if(token[0] == '!' & token[1] == 'p'){
-              printf("Not a P");
+              //printf("Not a P");
             }
             else if(line2[0] != 'p' & line2[0] != '!'){
               for(int i = 0; i < pow(2,N_ap); i++){
@@ -1104,21 +1186,21 @@ node ** create_buchi(node ** trans) {
   }
 
   for(int i = 0; i < 13; i++){
-    printf("%s %i\n",STATE_NAMES[i], i+1);
+    //printf("%s %i\n",STATE_NAMES[i], i+1);
   }
 
 
   for(int i = 0; i < 30; i++){
-    printf("\n");
+    //printf("\n");
   }
 
   for(int i = 0; i < sn_count; i++){
     for(int j = 0; j < sn_count; j++){
       if(trans[i*sn_count + j]){
-        printf("%i,%i   :    ",i+1,j+1);
+        //printf("%i,%i   :    ",i+1,j+1);
         trans[i*sn_count + j] = insertion_sort(trans[i*sn_count + j]);
-        //traverse(trans[i*sn_count + j],disp);
-        printf("\n\n\n");
+        ////traverse(trans[i*sn_count + j],disp);
+        //printf("\n\n\n");
       }
 
     }
@@ -1127,10 +1209,10 @@ node ** create_buchi(node ** trans) {
   for(int i = 0; i < sn_count; i++){
     for(int j = 0; j < sn_count; j++){
       if(trans[i*sn_count + j]){
-        printf("%i,%i   :    ",i+1,j+1);
+        //printf("%i,%i   :    ",i+1,j+1);
         //trans[i*sn_count + j] = insertion_sort(trans[i*sn_count + j]);
-        traverse(trans[i*sn_count + j],disp);
-        printf("\n\n\n");
+        //traverse(trans[i*sn_count + j],disp);
+        //printf("\n\n\n");
       }
 
     }
@@ -1268,23 +1350,23 @@ Buchi * Buchi_Struct() {
         sn_count2++;
       }
       else if(sn_count2 >= 0){
-        printf("%s%i\n",line2 ,sn_count2+1);
+        //printf("%s%i\n",line2 ,sn_count2+1);
         char * end_state = strstr(line2, "->");
         if(end_state){
-          printf("%s",end_state+3);
+          //printf("%s",end_state+3);
           for(int i = 0; i < sn_count; i++){
             if(strstr(end_state+3,STATE_NAMES[i])){
               end_trans = i;
-              printf("%i\n",i);
+              //printf("%i\n",i);
             }
           }
-          printf("%s\n","av" );
+          //printf("%s\n","av" );
 
           count = 0;
-          printf("%i\n",sn_count2 * sn_count +  end_trans - 1);
+          //printf("%i\n",sn_count2 * sn_count +  end_trans - 1);
           trans_entry = sn_count2 * sn_count +  end_trans ;
           curr_trans = trans[trans_entry];
-          printf("%s\n","av" );
+          //printf("%s\n","av" );
           token = strtok(line2, " & ");
           while( token != NULL )
           {
@@ -1297,21 +1379,21 @@ Buchi * Buchi_Struct() {
                         trans[trans_entry] = prepend(trans[trans_entry],i);
                       }
 
-                        traverse(trans[trans_entry],disp);
+                        //traverse(trans[trans_entry],disp);
 
-                      printf("\n");
+                      //printf("\n");
                     }
                   }
                   count++;
                 }
 
                 else if(count != 0){
-                  printf("%s\n","MADE" );
+                  //printf("%s\n","MADE" );
                   reduce_list(trans[trans_entry],power_set,token);
-                  printf("%s\n","MADE" );
+                  //printf("%s\n","MADE" );
 
                   count++;
-                  printf("%c\n", 'd');
+                  //printf("%c\n", 'd');
                 }
                 else if (trans){
                   for(int i = 0; i < (int)pow(2,N_ap); i++){
@@ -1320,19 +1402,19 @@ Buchi * Buchi_Struct() {
                           trans[trans_entry] = prepend(trans[trans_entry],i);
                         }
 
-                          traverse(trans[trans_entry],disp);
+                          //traverse(trans[trans_entry],disp);
 
-                        printf("\n");
+                        //printf("\n");
                       }
                     }
                 }
 
               }
-              traverse(trans[trans_entry],disp);
-              printf("%s\n", token);
+              //traverse(trans[trans_entry],disp);
+              //printf("%s\n", token);
 
             if(token[0] == '!' & token[1] == 'p'){
-              printf("Not a P");
+              //printf("Not a P");
             }
             else if(line2[0] != 'p' & line2[0] != '!'){
               for(int i = 0; i < pow(2,N_ap); i++){
@@ -1349,21 +1431,21 @@ Buchi * Buchi_Struct() {
   }
 
   for(int i = 0; i < 13; i++){
-    printf("%s %i\n",STATE_NAMES[i], i+1);
+    //printf("%s %i\n",STATE_NAMES[i], i+1);
   }
 
 
   for(int i = 0; i < 30; i++){
-    printf("\n");
+    //printf("\n");
   }
 
   for(int i = 0; i < sn_count; i++){
     for(int j = 0; j < sn_count; j++){
       if(trans[i*sn_count + j]){
-        printf("%i,%i   :    ",i+1,j+1);
+        //printf("%i,%i   :    ",i+1,j+1);
         trans[i*sn_count + j] = insertion_sort(trans[i*sn_count + j]);
         //traverse(trans[i*sn_count + j],disp);
-        printf("\n\n\n");
+        //printf("\n\n\n");
       }
 
     }
@@ -1372,10 +1454,10 @@ Buchi * Buchi_Struct() {
   for(int i = 0; i < sn_count; i++){
     for(int j = 0; j < sn_count; j++){
       if(trans[i*sn_count + j]){
-        printf("%i,%i   :    ",i+1,j+1);
+        //printf("%i,%i   :    ",i+1,j+1);
         //trans[i*sn_count + j] = insertion_sort(trans[i*sn_count + j]);
-        traverse(trans[i*sn_count + j],disp);
-        printf("\n\n\n");
+        //traverse(trans[i*sn_count + j],disp);
+        //printf("\n\n\n");
       }
 
     }
@@ -1402,7 +1484,32 @@ void reduce_list(node * head, char ** power_set, char * token){
 }
 
 
+matrix * getAdj(int size){
+  char *line = NULL;
+  size_t len = 0;
+  size_t read;
+  FILE * stream = fopen("adj.txt", "r");
+  if (stream == NULL)
+    exit(EXIT_FAILURE);
+  int begin = 0;
+  char * token;
+  matrix * result = newMatrix(size,size);
 
+  for(int i = 1; i <= size; i++){
+    read = getline(&line, &len, stream);
+    token = strtok(line, "    ");
+    for(int j = 1; j <= size; j++){
+      //printf("%s\n",token );
+      ELEM(result,i,j) = atoi(token);
+      token = strtok(NULL, "    ");
+
+
+    }
+  }
+
+  return result;
+
+}
 
 int getStateNames(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES){
 
@@ -1448,9 +1555,8 @@ int getStateNames(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES){
 
 
 
-Buchi * Buchi_Struct_New() {
+Buchi * Buchi_Struct_New(int N_ap) {
   Buchi * B1 = (Buchi * )malloc(sizeof(Buchi));
-  int N_ap = 7;
   char * alphabet[N_ap];
   char * power_set[(int)(pow(2,N_ap))];
   getAlpha(alphabet, N_ap);
@@ -1460,7 +1566,7 @@ Buchi * Buchi_Struct_New() {
 
   char BUCH_AUT[100000];
   char* STATE_NAMES[50];
-  int alpha_len = 7;
+  int alpha_len = N_ap;
   int sn_count = getStateNames(stream, BUCH_AUT, STATE_NAMES);
 
   //-----------------------------------------------------
@@ -1519,7 +1625,7 @@ Buchi * Buchi_Struct_New() {
     }
 
   }
-  printCellMatrix(B1->Trans);
+  //printCellMatrix(B1->Trans);
   return B1;
 }
 
@@ -1529,7 +1635,7 @@ Buchi * Buchi_Struct_New() {
 node * loopIntersect(char * line, node * curr_list, char ** power_set, int N_ap){
   node * line_list = NULL;
   node * full_set = NULL;
-  for(int i = 1; i < pow(2,N_ap); i++){
+  for(int i = 1; i <= pow(2,N_ap); i++){
     full_set = append(full_set, i );
   }
   callback disp = display;
@@ -1547,7 +1653,7 @@ node * loopIntersect(char * line, node * curr_list, char ** power_set, int N_ap)
       all_done = 1;
     }
     token[2] = '\0';
-    printf("%s\n", token);
+    //printf("%s\n", token);
     if(token[0]!='p'){
       line_list = intersection(line_list, full_set);
     }
@@ -1639,7 +1745,7 @@ int which_state_end(char * line, char ** state_names, int sn_count){
 
     for(int i = 1; i <= sn_count; i++){
       if (strstr(state_names[i-1],end_state)){
-        printf("%i  %s\n",  i, state_names[i-1]);
+        //printf("%i  %s\n",  i, state_names[i-1]);
         return i;
       }
     }

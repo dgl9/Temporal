@@ -5,68 +5,74 @@
 #include <string.h>
 #include "library.h"
 
+
+
 node* ismemberRows(matrix * A, matrix * B){
   if(A->cols != B->cols){
     return NULL;
   }
-  node * new_node = (node *)malloc(sizeof(node));
-  new_node->next = NULL;
+  node * result = NULL;
+  int noRes = 1;
+  int loc = 0;
   for(int i = 1; i <= A->rows; i++){
-    int loc = 0;
+    loc = 0;
     for(int j = 1; j <= B->rows; j++){
       if(check_row(A,B,i,j) && loc == 0) {
         loc = j;
       }
     }
-
-    if(i == 1){
-      printf("%i\n", loc);
-      new_node = create(loc,NULL);
+    if(loc){
+      result = append(result,loc);
+      noRes = 0;
     }
     else{
-      printf("%i\n", loc);
-      new_node = append(new_node,loc);
+      result = append(result,0);
     }
   }
-  return new_node;
+  if(noRes){
+    dispose(result);
+    return NULL;
+  }
+  return result;
 
 }
 
-node * cost(matrix * qpts, int N, node * xNew, matrix * dist, int bigNumber) {
-  int rows = qpts->rows;
-  int cols = qpts->cols;
-  cost = newMatrix(rows, 1);
-
-  // for every robot (1 to N), find the cost in the corresponding distance matrix and update the cost vector
-  for (int i = 1; i <= N; i++)
-  {
-    cost = cost + dist(getLinkedElement(xNew, i), qpts(:, i));
+int costTree(int start, int end, matrix * Dist, matrix * Qpba){
+  int cost = 0;
+  int state_start;
+  int state_end;
+  for(int i = 1; i <= Qpba->cols -1; i++){
+    state_start = ELEM(Qpba,start,i);
+    state_end = ELEM(Qpba,end,i);
+    cost += ELEM(Dist,state_start,state_end);
   }
 
-  // find the minimum cost in the cost vector
-  minCost = matrix_Minimum(cost);
+  return cost;
+}
 
-  if (minCost >= bigNumber) {
-    // then not feasible transition in the PTS (what does this mean)
 
+int findPrevPTSpoint(matrix * QPTS,node * xNew,matrix * Dist,int BigNum, matrix * CostNode, node*indices){
+  int min_cost = 2147483647;
+  int min_ind;
+  int temp_cost;
+  int temp_ind;
+  int xNewState;
+  int QptsState;
+  for(int row = 1; row <= QPTS->rows; row++){
+    temp_ind = getLinkedElement(indices,row);
+    temp_cost = ELEM(CostNode,temp_ind,1);
+    for(int rbt = 1; rbt <= ListLength(xNew); rbt++){
+      xNewState = getLinkedElement(xNew,rbt);
+      QptsState = ELEM(QPTS,row,rbt);
+      temp_cost += ELEM(Dist,QptsState,xNewState);
+    }
+    if (temp_cost < min_cost){
+      min_cost = temp_cost;
+      min_ind = row;
+    }
   }
+  if(min_cost >= BigNum){
+    return 0;
+  }
+  return min_ind;
 }
-
-int matrix_Minimum(matrix * myMatrix)
-{
-   int min = ELEM(myMatrix, 0, 0);
-   int rows = myMatrix->rows;
-   int cols = myMatrix->cols;
-   for (int x = 0; x < rows; x++)
-   {
-       for (int y = 0; y < cols; y++)
-       {
-           if (min > ELEM(myMatrix, x, y)
-           {
-               min = ELEM(myMatrix, x, y);
-           }
-       } 
-   }  
-   return min;
-}
-

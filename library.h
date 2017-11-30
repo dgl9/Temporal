@@ -27,12 +27,24 @@ typedef struct{
   node * F;
 } Buchi;
 
+
+
+void rewire(matrix * Qpba,matrix * parent,matrix * CostNode,matrix * Tadj,cell_matrix * AP,cell_matrix * Buchi,matrix * Dist, int ind, int N_p,int N);
+int check_pts(matrix * Qpba, matrix * Tadj, int qnew, int qb);
+int printMatrixLine(matrix * mat, int line);
+matrix * getAdj(int size);
+int subprintMatrix(matrix * mtx,int rows);
+int LLSUM(node *head);
+int costTree(int start, int end, matrix * Dist, matrix * Qpba);
+matrix * linkedToMatrix(node* linked);
+matrix * BuildQNEXT(node * xNew, int QbNext, int N);
+node * BuildQPREV(matrix * QPTS,matrix * QB,int prevQPBAindex);
 matrix * Qb(matrix * Qpba, node * indices, int N);
 matrix * Qpts(matrix * Qpba, node * indices, int N);
-node * findPrevPTSpoint(matrix * Qpts, node * xNew,matrix * Dist,int BigNum);
+int findPrevPTSpoint(matrix * QPTS, node * xNew,matrix * Dist,int BigNum, matrix * CostNode, node*indices);
 int getStateNamesNew(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES);
 int on_off(char * line, int curr);
-Buchi * Buchi_Struct_New();
+Buchi * Buchi_Struct_New(int N_ap);
 int which_state_start(char * line, int curr);
 int which_state_end(char * line, char ** state_names, int sn_count);
 node * intersection(node * A, node * B);
