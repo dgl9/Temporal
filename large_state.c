@@ -8,30 +8,23 @@
 #include <unistd.h>
 
 
+
 int main() {
   /* code */
   srand(time(NULL));
-  matrix * Tadj = getAdj(16);
+  matrix * Tadj = getAdj(9);
 
 
 
 
 
-  ELEM(Tadj,1,6)=1;ELEM(Tadj,6,1)=1;
-  ELEM(Tadj,3,8)=1;ELEM(Tadj,8,3)=1;
-  ELEM(Tadj,7,10)=1;ELEM(Tadj,10,7)=1;
-  ELEM(Tadj,9,6)=1;ELEM(Tadj,6,9)=1;
-  ELEM(Tadj,2,7)=1;ELEM(Tadj,7,2)=1;
-  ELEM(Tadj,4,7)=1;ELEM(Tadj,7,4)=1;
-  ELEM(Tadj,8,11)=1;ELEM(Tadj,11,8)=1;
-  ELEM(Tadj,14,11)=1;ELEM(Tadj,11,14)=1;
-  ELEM(Tadj,10,15)=1;ELEM(Tadj,10,15)=1;
+
 
   printMatrix(Tadj);
 
-  int TQ1[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-  int Tx1[] = {1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4};
-  int Ty1[] = {4,4,4,4,3,3,3,3,2,2,2,2,1,1,1,1};
+  int TQ1[] = {1,2,3,4,5,6,7,8,9};
+  int Tx1[] = {0,  0,  4,  6,  8,  8,  8,  4, 10};
+  int Ty1[] = {0, 4, 4, 4, 4, 2,      0,      0, 2};
 
   node * TQ = NULL;
   node * Tx = NULL;
@@ -39,24 +32,24 @@ int main() {
 
   callback disp = display;
 
-  TQ = AppendList(TQ,TQ1,16);
-  Tx = AppendList(Tx, Tx1, 16);
-  Ty = AppendList(Ty, Ty1, 16);
+  TQ = AppendList(TQ,TQ1,9);
+  Tx = AppendList(Tx, Tx1, 9);
+  Ty = AppendList(Ty, Ty1, 9);
   //traverse(TQ,disp);
   //printf("\n");
   //traverse(Tx,disp);
   //printf("\n");
   //traverse(Ty,disp);
 
-  int maxNum= 16;
+  int maxNum= 9;
   int BigNum = 1000000;
 
   matrix * dist = DistanceMatrix(Tadj, Tx, Ty, BigNum);
   printMatrix(dist);
 
-  int N=2;
-  int x01[] = {1,1};
-  node * x0 = AppendList(x0,x01,2);
+  int N=9;
+  int x01[] = {5,5,3,7,7,7,7,4,1};
+  node * x0 = AppendList(x0,x01,9);
 
   int d=2*N;
 
@@ -68,8 +61,11 @@ int main() {
   char BUCH_AUT[100000];
   char* STATE_NAMES[50];
   int sn_count = getStateNamesNew(stream, BUCH_AUT, STATE_NAMES);
+  getchar();
   B1 = Buchi_Struct_New(6);
+
   matrix * neig = newMatrix(sn_count,sn_count);
+
 
   for(int j1 = 1; j1 <= sn_count; j1++){
     for(int j2 = 1; j2 <= sn_count; j2++){
@@ -78,6 +74,7 @@ int main() {
       }
     }
   }
+
 
   //printf("\n\n\n\n");
   //printCellMatrix(B1->Trans);
@@ -104,14 +101,27 @@ int main() {
     SetCell(AP,i,N+1,pow(2,i-1));
   }
 
+  SetCell(AP,1,1,5);
+  SetCell(AP,1,2,5);
 
-  SetCell(AP,1,1,6);
-  SetCell(AP,2,1,9);
-  SetCell(AP,3,2,14);
 
-  SetCell(AP,4,1,4);
-  SetCell(AP,5,2,12);
-  SetCell(AP,6,2,10);
+  SetCell(AP,2,2,1);
+  SetCell(AP,2,3,1);
+  SetCell(AP,2,4,1);
+
+  SetCell(AP,3,4,7);
+  SetCell(AP,3,5,7);
+  SetCell(AP,3,6,7);
+
+  SetCell(AP,4,6,8);
+  SetCell(AP,4,7,8);
+
+  SetCell(AP,5,7,4);
+  SetCell(AP,5,8,4);
+
+  SetCell(AP,6,8,3);
+  SetCell(AP,6,9,3);
+
 
 
   for(int i = 1; i <=  AP->rows ; i++){
@@ -124,11 +134,14 @@ int main() {
       }
     }
   }
-  //printCellMatrix(AP);
+  printCellMatrix(AP);
   //
   //  //AP(7,N+2)={6};AP(8,N+2)={2};%AP(8,N+2)={[6,7]};%indices of rbts involved in satisfaction of an AP
   // //-------------------------------------
-  int nMaxPre=1000;
+
+
+
+  int nMaxPre=8000;
   int n = ListLength(B1->S)*(maxNum)*N;
   matrix * parent=newMatrix(nMaxPre*10,1);
   matrix * Qpba = newMatrix(nMaxPre*10,N+1);
@@ -139,15 +152,19 @@ int main() {
     setElement(Qpba,1,i,temp->data);
     temp = temp->next;
   }
-  setElement(Qpba,1,Qpba->cols,B1->S0->data);
+
+  setElement(Qpba,1,Qpba->cols,2);// B1->S0->data);
+
   //printMatrix(Qpba);
 
   node * path;
-  float epsilon=0.1;
+  float epsilon=0;
   int ind = 2;
   int stop=0;
   matrix * CostNode= newMatrix(nMaxPre*10,1);
   matrix * SizeTree= newMatrix(nMaxPre*10,1);
+  printCellMatrix(B1->Trans);
+  printMatrix(neig);
 
   //==================Build Prefix part========================================
   int goal = B1->F->data;
@@ -173,9 +190,34 @@ int main() {
   int newCost;
   int par;
 
+  getchar();
+  // FILE * stream8 = fopen("sample_locs.txt", "r");
+  // node * blah =  get_location(stream8, 9);
+  // traverse(blah,disp);
+  getchar();
+    //getchar();
 
+  //   getchar();
+  //   node * samplePos = NULL;
+  //   samplePos = append(samplePos,5);
+  //   samplePos = append(samplePos,5);
+  //   samplePos = append(samplePos,1);
+  //   samplePos = append(samplePos,7);
+  //   samplePos = append(samplePos,7);
+  //   samplePos = append(samplePos,7);
+  //   samplePos = append(samplePos,1);
+  //   samplePos = append(samplePos,3);
+  //   samplePos = append(samplePos,3);
+  //   getchar();
+  //
+  //
+  //
+  // sat = observeInDiscreteEnvironment(N,N_p,AP,samplePos,0);
+  // traverse(sat,disp);
+  FILE * stream8 = fopen("sample_locs.txt", "r");
 
-  for(int n = 1; n <= nMaxPre-3; n++){
+  for(int n = 1; n <= nMaxPre; n++){
+
     if(!(n%50)){
       printf("n : %i\n", n);
     }
@@ -183,18 +225,31 @@ int main() {
     xNew = NULL;
     dispose(sat);
     sat = NULL;
-    xNew = sampleReachablePTSpointTree(Qpba, N, Tadj, Tx, Ty,TQ,ind); //FIGURE THESE OUT TOMORROW
-    sat = observeInDiscreteEnvironment(N,N_p,AP,xNew,epsilon);
+
+    node * xNew =  sampleReachablePTSpointTree(Qpba, N, Tadj, Tx, Ty,TQ,ind); //FIGURE THESE OUT TOMORROW
+    // getchar();
+    // get_location(stream8, 9);
+    // traverse(xNew,disp);
+
+    sat = observeInDiscreteEnvironment(N,N_p,AP,xNew,0);
+
+
+
     ////printf("SAT\n");
     //traverse(xNew,disp);
     setElement(reject,1,n,0);
 
     for(int q2 = 1; q2 <= ListLength(B1->S); q2++){
+
+
       qBnext = getLinkedElement(B1->S, q2);
       //printf("\nQQQNEE%i\n", qBnext);
       dispose(candParents);
       candParents = NULL;
+
       candParents = findBuchiNeighbors(qBnext,neig);
+
+
         //printf("\n1wwwerqw%i\n", qBnext);
       //traverse(candParents,disp);
       //printf("\n1wwwerqw%i\n", qBnext);
@@ -204,6 +259,7 @@ int main() {
         for(int jj = 1; jj <= ListLength(candParents); jj++){
           //printf("\n1wwwerqw%i\n", qBnext);
           qBPrev = getLinkedElement(candParents,jj);
+
           for(int i = 1; i <= ind; i++){
             if(qBPrev == ELEM(Qpba,i,N+1)){
               indices = append(indices,i);
@@ -267,10 +323,11 @@ int main() {
               //printf("costTree%i\n", costTree(par,ind,dist,Qpba));
               //printf("TOTAL%i\n", ELEM(CostNode,ind,1));
               if(ELEM(CostNode,ind,1) > BigNum){
-                        //getchar();
+                        ////getchar();
               }
 
-              if(search(B1->F,qBnext)){
+              if((search(B1->F,qBnext) != NULL) | (qBnext == 3)){
+
                 printf("GOAL\n");
                 F = append(F,ind);
               }
@@ -325,7 +382,7 @@ int main() {
   //traverse(observeInDiscreteEnvironment(N,N_p,AP,xNew,epsilon),disp);
 
 
-  //subprintMatrix(Qpba,ind);
+  subprintMatrix(Qpba,ind);
   //printMatrix(parent);
   //printf("\n");
   //printf("COST\n");
@@ -346,6 +403,7 @@ int main() {
       //printf("\n");
   }
 }
+// printMatrix(Qpba);
 printf("starting suffix\n");
 //getchar();
   // BUILD SUFFIX --------------------------------------------------------
@@ -427,6 +485,7 @@ for(int f = 1; f <= ListLength(F); f++){
       sat = NULL;
       xNew = sampleReachablePTSpointTree(Qpba, N, Tadj, Tx, Ty,TQ,ind); //FIGURE THESE OUT TOMORROW
       sat = observeInDiscreteEnvironment(N,N_p,AP,xNew,epsilon);
+
       //printf("SAT\n");
       //traverse(xNew,disp);
       setElement(reject,1,n,0);

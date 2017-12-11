@@ -91,17 +91,26 @@ matrix * Qb(matrix * Qpba, node * indices, int N){
 
 
 node * observeInDiscreteEnvironment(int N, int N_p, cell_matrix * AP, node * xNew,int epsilon){
+  callback disp = display;
   node * sat = NULL;
-  node * robots;
+  node * robots = NULL;
   int checkAP;
   int rbt;
   for(int ap = 1; ap <= N_p; ap++){
+
+    //getchar();
     robots = getCell(AP,ap,N+2);
     checkAP = 0;
+
+    //getchar();
     for(int indexRbt = 1; indexRbt <= ListLength(robots); indexRbt ++){
+
+      //getchar();
       rbt = getLinkedElement(robots,indexRbt);
+
+      //getchar();
       if(getLinkedElement(xNew,rbt) == getCell(AP,ap,rbt)->data){
-        checkAP ++;
+        checkAP++;
       }
     }
     if(checkAP == ListLength(robots)){
@@ -119,10 +128,12 @@ node * sampleReachablePTSpointTree(matrix * Qpba, int N, matrix * Tadj, node * T
   node * xRand = NULL;
   callback disp = display;
   int prevSpot;
+  int pickInd = rand()%(ind);
+
 
   node * reachable = NULL;
   for(int i = 1; i <= N; i++){
-    prevSpot = ELEM(Qpba, ind - 1, i);
+    prevSpot = ELEM(Qpba, pickInd, i);
     //printf("%i\n", prevSpot);
     for(int j = 1; j <= Tadj->rows; j++){
       if(CELL(Tadj,prevSpot,j)){
@@ -1510,6 +1521,25 @@ matrix * getAdj(int size){
   return result;
 
 }
+
+node * get_location(FILE * stream, int robots){
+  node * result = NULL;
+  char *line = NULL;
+  size_t read;
+  size_t len = 0;
+  char * token;
+  read = getline(&line, &len, stream);
+  token = strtok(line, " ");
+  for(int j = 1; j <= robots; j++){
+    result = append(result,(atoi(token)));
+    token = strtok(NULL, " ");
+
+  }
+  return result;
+
+
+}
+
 
 int getStateNames(FILE * stream, char * BUCH_AUT, char ** STATE_NAMES){
 

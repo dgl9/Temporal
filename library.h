@@ -28,7 +28,7 @@ typedef struct{
 } Buchi;
 
 
-
+node * get_location(FILE * stream, int robots);
 void rewire(matrix * Qpba,matrix * parent,matrix * CostNode,matrix * Tadj,cell_matrix * AP,cell_matrix * Buchi,matrix * Dist, int ind, int N_p,int N);
 int check_pts(matrix * Qpba, matrix * Tadj, int qnew, int qb);
 int printMatrixLine(matrix * mat, int line);
